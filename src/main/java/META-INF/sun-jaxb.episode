@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<bindings version="2.1" xmlns="http://java.sun.com/xml/ns/jaxb">
+  <!--
+
+Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.11 generiert 
+Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
+Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
+Generiert: 2017.09.04 um 06:23:38 PM CEST 
+
+  -->
+  <bindings scd="x-schema::tns" xmlns:tns="http://www.niso.org/schemas/sushi">
+    <schemaBindings map="false">
+      <package name="unidue.ub.sushiclient.service"/>
+    </schemaBindings>
+    <bindings scd="~tns:ReportDefinition">
+      <class ref="unidue.ub.sushiclient.service.ReportDefinition"/>
+    </bindings>
+    <bindings scd="~tns:ReportRequest">
+      <class ref="unidue.ub.sushiclient.service.ReportRequest"/>
+    </bindings>
+    <bindings scd="~tns:ReportResponse">
+      <class ref="unidue.ub.sushiclient.service.ReportResponse"/>
+    </bindings>
+    <bindings scd="~tns:Requestor">
+      <class ref="unidue.ub.sushiclient.service.Requestor"/>
+    </bindings>
+    <bindings scd="~tns:FilterName">
+      <class ref="unidue.ub.sushiclient.service.FilterName"/>
+    </bindings>
+    <bindings scd="~tns:ReportAttribute">
+      <class ref="unidue.ub.sushiclient.service.ReportAttribute"/>
+    </bindings>
+    <bindings scd="~tns:Range">
+      <class ref="unidue.ub.sushiclient.service.Range"/>
+    </bindings>
+    <bindings scd="~tns:CustomerReference">
+      <class ref="unidue.ub.sushiclient.service.CustomerReference"/>
+    </bindings>
+    <bindings scd="~tns:Exception">
+      <class ref="unidue.ub.sushiclient.service.Exception"/>
+    </bindings>
+    <bindings scd="~tns:Activity">
+      <class ref="unidue.ub.sushiclient.service.Activity"/>
+    </bindings>
+    <bindings scd="~tns:ExceptionSeverity">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.ExceptionSeverity"/>
+    </bindings>
+  </bindings>
+  <bindings scd="x-schema::tns" xmlns:tns="http://www.niso.org/schemas/counter">
+    <schemaBindings map="false">
+      <package name="unidue.ub.sushiclient.service"/>
+    </schemaBindings>
+    <bindings scd="~tns:Report">
+      <class ref="unidue.ub.sushiclient.service.Report"/>
+    </bindings>
+    <bindings scd="~tns:Reports">
+      <class ref="unidue.ub.sushiclient.service.Reports"/>
+    </bindings>
+    <bindings scd="~tns:Customer">
+      <class ref="unidue.ub.sushiclient.service.Customer"/>
+    </bindings>
+    <bindings scd="~tns:IPAddress">
+      <class ref="unidue.ub.sushiclient.service.IPAddress"/>
+    </bindings>
+    <bindings scd="~tns:Identifier">
+      <class ref="unidue.ub.sushiclient.service.Identifier"/>
+    </bindings>
+    <bindings scd="~tns:ItemAttribute">
+      <class ref="unidue.ub.sushiclient.service.ItemAttribute"/>
+    </bindings>
+    <bindings scd="~tns:ItemContributorID">
+      <class ref="unidue.ub.sushiclient.service.ItemContributorID"/>
+    </bindings>
+    <bindings scd="~tns:ItemContributor">
+      <class ref="unidue.ub.sushiclient.service.ItemContributor"/>
+    </bindings>
+    <bindings scd="~tns:ItemDate">
+      <class ref="unidue.ub.sushiclient.service.ItemDate"/>
+    </bindings>
+    <bindings scd="~tns:ParentItem">
+      <class ref="unidue.ub.sushiclient.service.ParentItem"/>
+    </bindings>
+    <bindings scd="~tns:ReportItem">
+      <class ref="unidue.ub.sushiclient.service.ReportItem"/>
+    </bindings>
+    <bindings scd="~tns:Vendor">
+      <class ref="unidue.ub.sushiclient.service.Vendor"/>
+    </bindings>
+    <bindings scd="~tns:Contact">
+      <class ref="unidue.ub.sushiclient.service.Contact"/>
+    </bindings>
+    <bindings scd="~tns:Organization">
+      <class ref="unidue.ub.sushiclient.service.Organization"/>
+    </bindings>
+    <bindings scd="~tns:Consortium">
+      <class ref="unidue.ub.sushiclient.service.Consortium"/>
+    </bindings>
+    <bindings scd="~tns:DateRange">
+      <class ref="unidue.ub.sushiclient.service.DateRange"/>
+    </bindings>
+    <bindings scd="~tns:Metric">
+      <class ref="unidue.ub.sushiclient.service.Metric"/>
+    </bindings>
+    <bindings scd="~tns:PerformanceCounter">
+      <class ref="unidue.ub.sushiclient.service.PerformanceCounter"/>
+    </bindings>
+    <bindings scd="~tns:IdentifierType">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.IdentifierType"/>
+    </bindings>
+    <bindings scd="~tns:AttributeType">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.AttributeType"/>
+    </bindings>
+    <bindings scd="~tns:ContributorIdentifierType">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.ContributorIdentifierType"/>
+    </bindings>
+    <bindings scd="~tns:DateType">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.DateType"/>
+    </bindings>
+    <bindings scd="~tns:DataType">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.DataType"/>
+    </bindings>
+    <bindings scd="~tns:Category">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.Category"/>
+    </bindings>
+    <bindings scd="~tns:MetricType">
+      <typesafeEnumClass ref="unidue.ub.sushiclient.service.MetricType"/>
+    </bindings>
+  </bindings>
+  <bindings scd="x-schema::tns" xmlns:tns="http://www.niso.org/schemas/sushi/counter">
+    <schemaBindings map="false">
+      <package name="unidue.ub.sushiclient.service"/>
+    </schemaBindings>
+    <bindings scd="~tns:CounterReportResponse">
+      <class ref="unidue.ub.sushiclient.service.CounterReportResponse"/>
+    </bindings>
+  </bindings>
+</bindings>
+
