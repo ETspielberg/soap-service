@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "Activity", namespace = "http://www.niso.org/schemas/sushi")
+@XmlType(name = "Activity", namespace = "http://www.niso.org/schemas/sushi/1_7")
 public class Activity {
 
 

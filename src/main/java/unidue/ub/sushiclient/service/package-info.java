@@ -5,5 +5,11 @@
 // Generiert: 2017.09.04 um 06:23:38 PM CEST 
 //
 
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.niso.org/schemas/counter", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.niso.org/schemas/sushi",
+        xmlns = {
+                @XmlNs(namespaceURI = "http://www.niso.org/schemas/sushi", prefix = "sus")
+        },
+        elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
 package unidue.ub.sushiclient.service;
+
+import javax.xml.bind.annotation.XmlNs;

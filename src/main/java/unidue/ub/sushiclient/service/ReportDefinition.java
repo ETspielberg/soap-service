@@ -60,10 +60,13 @@ public class ReportDefinition {
 
     @XmlElement(name = "Filters", required = true)
     protected ReportDefinition.Filters filters;
+
     @XmlAttribute(name = "Name", required = true)
     protected String name;
+
     @XmlAttribute(name = "Release", required = true)
     protected String release;
+
 
     /**
      * Ruft den Wert der filters-Eigenschaft ab.
