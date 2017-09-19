@@ -1,6 +1,8 @@
 package unidue.ub.sushiclient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jdom2.Element;
+import org.jdom2.transform.JDOMSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +10,8 @@ import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.core.support.WebServiceGatewaySupport;
+import org.springframework.ws.soap.SoapBody;
+import org.springframework.ws.soap.SoapEnvelope;
 import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import unidue.ub.settings.fachref.Sushiprovider;
 import unidue.ub.sushiclient.service.*;
@@ -15,22 +19,90 @@ import unidue.ub.sushiclient.service.*;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.soap.*;
+import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.Exception;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 
 @RequestMapping(value="sushi")
 public class SushiClient extends WebServiceGatewaySupport {
 
+    private final static String namespaceCounter = "http://www.niso.org/schemas/sushi/counter";
+
+    private final static String namespaceSushi = "http://www.niso.org/schemas/sushi";
+
+    private final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private int release = 4;
+
+    private LocalDateTime startTime;
+
+    private LocalDateTime endTime;
+
+    private String reportType;
+
+    public SushiClient() {
+        LocalDateTime TODAY  = LocalDateTime.now();
+        int timeshift;
+        if (TODAY.getDayOfMonth() < 15)
+            timeshift = 3;
+        else
+            timeshift = 2;
+        startTime = LocalDateTime.now().minusMonths(timeshift).withDayOfMonth(1);
+        endTime =  LocalDateTime.now().minusMonths(timeshift-1).withDayOfMonth(1).minusDays(1);
+        release = 4;
+        reportType = "JR1";
+    }
+
+    public int getRelease() {
+        return release;
+    }
+
+    public void setRelease(int release) {
+        this.release = release;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getReportType() {
+        return reportType;
+    }
+
+    public void setReportType(String reportType) {
+        this.reportType = reportType;
+    }
+
     private final static Logger log = LoggerFactory.getLogger(SushiClient.class);
 
     private final WebServiceTemplate webServiceTemplate = getWebServiceTemplate();
 
-    public CounterReportResponse getReport(String sushiproviderName) throws IOException {
+    public CounterReportResponse getReport(String sushiproviderName) throws IOException, SOAPException {
+
+        SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
+        SOAPConnection soapConnection = soapConnectionFactory.createConnection();
 
         log.info("retrieving data for sushiprovider number " + sushiproviderName);
 
@@ -38,102 +110,70 @@ public class SushiClient extends WebServiceGatewaySupport {
         Sushiprovider provider = mapper.readValue(new URL("http://localhost:11300/sushiprovider/" + sushiproviderName),
                 Sushiprovider.class);
         log.info("read sushiprovider " + provider.getName());
+        MessageFactory messageFactory = MessageFactory.newInstance();
+        SOAPMessage soapMessage = messageFactory.createMessage();
+        SOAPPart soapPart = soapMessage.getSOAPPart();
 
-        ReportRequest request = new ReportRequest();
+        // SOAP Envelope
+        SOAPEnvelope envelope = soapPart.getEnvelope();
+        envelope.addNamespaceDeclaration("coun", namespaceCounter);
+        envelope.addNamespaceDeclaration("sus", namespaceSushi);
 
-        CustomerReference reference = new CustomerReference();
-        reference.setID(provider.getSushiCustomerReferenceID());
+        // SOAP Body
+        SOAPBody soapBody = envelope.getBody();
+        SOAPElement reportRequest = soapBody.addChildElement("ReportRequest", "coun");
+        reportRequest.setAttribute("ID", provider.getSushiRequestorID());
+        reportRequest.setAttribute("Created", ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT));
 
-        // create the Requestor object
-        Requestor requestor = new Requestor();
-        requestor.setID(provider.getSushiRequestorID());
-        if (!provider.getSushiRequestorName().isEmpty())
-            requestor.setName(provider.getSushiRequestorName());
+        SOAPElement requestor = reportRequest.addChildElement("Requestor", "sus");
+        SOAPElement requestorID = requestor.addChildElement("ID", "sus");
+        requestorID.addTextNode(provider.getSushiRequestorID());
 
-        // create the ReportDefinition
-        ReportDefinition definition = new ReportDefinition();
-        definition.setRelease(String.valueOf(provider.getSushiRelease()));
-        definition.setName("JR1");
-
-        // createFilters
-        ReportDefinition.Filters filters = new ReportDefinition.Filters();
-        Range range = new Range();
-        LocalDateTime today = LocalDateTime.now();
-
-        LocalDateTime start = today.minusMonths(3);
-        LocalDateTime end = today.minusMonths(2);
-        try {
-            range.setBegin(DatatypeFactory.newInstance().newXMLGregorianCalendar(start.toString()));
-            range.setEnd(DatatypeFactory.newInstance().newXMLGregorianCalendar(end.toString()));
-        } catch (DatatypeConfigurationException e) {
-            e.printStackTrace();
+        if (!provider.getSushiRequestorName().isEmpty()) {
+            SOAPElement requestorName = requestor.addChildElement("Name", "sus");
+            requestorName.addTextNode(provider.getSushiRequestorName());
         }
 
-        filters.setUsageDateRange(range);
-        definition.setFilters(filters);
-
-        // build the request
-        request.setCustomerReference(reference);
-        request.setRequestor(requestor);
-        request.setReportDefinition(definition);
-        request.setID(provider.getSushiRequestorID());
-        try {
-            request.setCreated(DatatypeFactory.newInstance().newXMLGregorianCalendar(LocalDateTime.now().toString()));
-        } catch (DatatypeConfigurationException e1) {
-            e1.printStackTrace();
+        if (!provider.getSushiRequestorEmail().isEmpty()) {
+            SOAPElement requestorEmail = requestor.addChildElement("Email", "sus");
+            requestorEmail.addTextNode(provider.getSushiRequestorEmail());
         }
 
-        CounterReportResponse response = (CounterReportResponse) webServiceTemplate
-                .marshalSendAndReceive(//provider.getSushiURL(),
-                        "http://localhost:5555",
-                        request,
-                        new WebServiceMessageCallback() {
-                            @Override
-                            public void doWithMessage(WebServiceMessage webServiceMessage) throws IOException, TransformerException {
-                                SaajSoapMessage message = (SaajSoapMessage) webServiceMessage;
-                                MimeHeaders mimeHeaders = message.getSaajMessage().getMimeHeaders();
-                                mimeHeaders.setHeader("SOAPAction","SushiService:GetReportIn");
-                                try {
-                                    SOAPEnvelope envelope = message.getSaajMessage().getSOAPPart().getEnvelope();
-                                    envelope.removeNamespaceDeclaration("SOAP-ENV");
-                                    envelope.addNamespaceDeclaration("soap", "http://schemas.xmlsoap.org/soap/envelope/");
-                                    envelope.setPrefix("soap");
-                                    message.getSaajMessage().getSOAPHeader().setPrefix("soap");
-                                    Iterator<SOAPElement> iterator = message.getSaajMessage().getSOAPBody().getChildElements();
-                                    log.info("removing namespaces");
-                                        while (iterator.hasNext()) {
+        SOAPElement customerReference = reportRequest.addChildElement("CustomerReference", "sus");
+        SOAPElement customerReferenceID = customerReference.addChildElement("ID","sus");
+        customerReferenceID.addTextNode(provider.getSushiCustomerReferenceID());
 
-                                            SOAPElement element = iterator.next();
-                                            log.info("dealing with element " + element.getNodeName());
-                                            if (element.hasChildNodes()) {
-                                                Iterator<SOAPElement> childIterator = element.getChildElements();
-                                                while (childIterator.hasNext()) {
-                                                    SOAPElement child = (SOAPElement) childIterator.next();
-                                                    log.info("dealing with element " + child.getNodeName());
-                                                    child.removeNamespaceDeclaration("sus");
-                                                    log.info("removed namespace sus");
-                                                }
-                                            }
-                                            element.removeNamespaceDeclaration("ns3");
-                                            log.info("removed namespace ns3");
-                                            element.removeNamespaceDeclaration("ns4");
-                                            log.info("removed namespace ns4");
-                                        }
+        if (!provider.getSushiCustomerReferenceName().isEmpty()) {
+            SOAPElement customerReferenceName = customerReference.addChildElement("Name","sus");
+            customerReferenceName.addTextNode(provider.getSushiCustomerReferenceName());
+        }
 
-                                    SOAPBody body = message.getSaajMessage().getSOAPBody();
-                                    body.setPrefix("soap");
-                                    SOAPFault fault = message.getSaajMessage().getSOAPBody().getFault();
-                                    if (fault != null) {
-                                        fault.setPrefix("soap");
-                                    }
+        SOAPElement reportDefinition = reportRequest.addChildElement("ReportDefinition","sus");
+        reportDefinition.setAttribute("Release", String.valueOf(release));
+        reportDefinition.setAttribute("Name", reportType);
 
-                                } catch (SOAPException e) {
-                                    e.printStackTrace();
-                                    log.info("could not set soap prefix");
-                                }
-                            }
-                        });
-        return response;
+        SOAPElement filters = reportDefinition.addChildElement("Filters","sus");
+        SOAPElement usageDataRange = filters.addChildElement("UsageDateRange","sus");
+
+        SOAPElement begin = usageDataRange.addChildElement("Begin","sus");
+        begin.addTextNode(startTime.format(dtf));
+
+        SOAPElement end = usageDataRange.addChildElement("End","sus");
+        end.setTextContent(endTime.format(dtf));
+
+        MimeHeaders headers = soapMessage.getMimeHeaders();
+        headers.addHeader("SOAPAction", "SushiService:GetReportIn");
+
+        soapMessage.saveChanges();
+
+        SOAPMessage soapResponse = soapConnection.call(soapMessage, provider.getSushiURL());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        soapResponse.writeTo(out);
+
+        log.info(out.toString());
+
+        return new CounterReportResponse();
     }
 
 }
