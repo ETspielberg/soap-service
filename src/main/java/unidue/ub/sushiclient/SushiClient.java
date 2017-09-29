@@ -16,6 +16,9 @@ import org.springframework.ws.soap.saaj.SaajSoapMessage;
 import unidue.ub.settings.fachref.Sushiprovider;
 import unidue.ub.sushiclient.service.*;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.soap.*;
@@ -173,7 +176,16 @@ public class SushiClient extends WebServiceGatewaySupport {
 
         log.info(out.toString());
 
-        return new CounterReportResponse();
+        CounterReportResponse response = new CounterReportResponse();
+
+        try {
+            Unmarshaller unmarshaller = JAXBContext.newInstance(CounterReportResponse.class).createUnmarshaller();
+            response = (CounterReportResponse) unmarshaller.unmarshal(soapResponse.getSOAPBody().extractContentAsDocument());
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+
+        return response;
     }
 
 }
