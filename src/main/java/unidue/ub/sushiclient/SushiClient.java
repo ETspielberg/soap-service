@@ -1,40 +1,34 @@
 package unidue.ub.sushiclient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jdom2.Element;
-import org.jdom2.transform.JDOMSource;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.jdom2.JDOMException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.core.support.WebServiceGatewaySupport;
-import org.springframework.ws.soap.SoapBody;
-import org.springframework.ws.soap.SoapEnvelope;
-import org.springframework.ws.soap.saaj.SaajSoapMessage;
+import org.apache.commons.httpclient.HttpClient;
+import unidue.ub.media.analysis.Counter;
+import unidue.ub.media.analysis.CounterTools;
 import unidue.ub.settings.fachref.Sushiprovider;
 import unidue.ub.sushiclient.service.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
 import javax.xml.soap.*;
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.Exception;
 import java.net.URL;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
 @RequestMapping(value="sushi")
 public class SushiClient extends WebServiceGatewaySupport {
@@ -52,6 +46,11 @@ public class SushiClient extends WebServiceGatewaySupport {
     private LocalDateTime endTime;
 
     private String reportType;
+
+    private ObjectMapper mapper = new ObjectMapper();
+
+    @Value("${ub.statistics.data.url}")
+    private String dataUrl;
 
     public SushiClient() {
         LocalDateTime TODAY  = LocalDateTime.now();
@@ -109,7 +108,6 @@ public class SushiClient extends WebServiceGatewaySupport {
 
         log.info("retrieving data for sushiprovider number " + sushiproviderName);
 
-        ObjectMapper mapper = new ObjectMapper();
         Sushiprovider provider = mapper.readValue(new URL("http://localhost:11300/sushiprovider/" + sushiproviderName),
                 Sushiprovider.class);
         log.info("read sushiprovider " + provider.getName());
@@ -170,12 +168,13 @@ public class SushiClient extends WebServiceGatewaySupport {
         soapMessage.saveChanges();
 
         SOAPMessage soapResponse = soapConnection.call(soapMessage, provider.getSushiURL());
+        List<Counter> counters = new ArrayList<>();
+        try {
+            counters = CounterTools.convertSOAPMessageToCounters(soapResponse);
+            write(counters);
+        } catch (Exception e) {
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        soapResponse.writeTo(out);
-
-        log.info(out.toString());
-
+        }
         CounterReportResponse response = new CounterReportResponse();
 
         try {
@@ -186,6 +185,18 @@ public class SushiClient extends WebServiceGatewaySupport {
         }
 
         return response;
+    }
+
+    public void write(List list) throws Exception {
+        for (Object counter : list) {
+                String json = mapper.writeValueAsString(counter);
+                HttpClient client = new HttpClient();
+                PostMethod post = new PostMethod(dataUrl + "/journalcounter");
+                RequestEntity entity = new StringRequestEntity(json, "application/json", null);
+                post.setRequestEntity(entity);
+                int status = client.executeMethod(post);
+                log.info("posted counter with return status " + status);
+        }
     }
 
 }

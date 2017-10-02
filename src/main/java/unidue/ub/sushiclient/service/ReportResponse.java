@@ -45,7 +45,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "ReportResponse", namespace = "http://www.niso.org/schemas/sushi", propOrder = {
+@XmlType(name = "ReportResponse", namespace = "http://www.niso.org/schemas/sushi/counter", propOrder = {
     "exception",
     "requestor",
     "customerReference",
